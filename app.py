@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, request, redirect
 import sqlite3
 
 app = Flask(__name__)
@@ -6,36 +6,14 @@ app = Flask(__name__)
 def get_db():
     return sqlite3.connect("users.db")
 
-
 @app.route("/")
 def home():
-    return "Login App Running"
+    return render_template("login.html")
 
-
-# REGISTER USER
-@app.route("/register", methods=["POST"])
-def register():
-    data = request.json
-    username = data["username"]
-    password = data["password"]
-
-    conn = get_db()
-    conn.execute(
-        "INSERT INTO users (username, password) VALUES (?, ?)",
-        (username, password)
-    )
-    conn.commit()
-    conn.close()
-
-    return {"message": "User registered successfully"}
-
-
-# LOGIN USER
 @app.route("/login", methods=["POST"])
 def login():
-    data = request.json
-    username = data["username"]
-    password = data["password"]
+    username = request.form["username"]
+    password = request.form["password"]
 
     conn = get_db()
     cur = conn.execute(
@@ -47,9 +25,24 @@ def login():
     conn.close()
 
     if user:
-        return {"message": "Login successful"}
+        return f"Welcome {username}!"
     else:
-        return {"message": "Invalid credentials"}, 401
+        return "Invalid login"
+
+@app.route("/register", methods=["POST"])
+def register():
+    username = request.form["username"]
+    password = request.form["password"]
+
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO users (username,password) VALUES (?,?)",
+        (username, password)
+    )
+    conn.commit()
+    conn.close()
+
+    return "User registered successfully"
 
 
 if __name__ == "__main__":
